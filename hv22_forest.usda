@@ -1,0 +1,42 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    doc = """Sim-ready wrapper for the hv22 Gaussian-splat forest (hv22_forest/, delivered as-is).
+    Frame: the designer's spawn column (12.02, -9.88) in splat ENU coordinates is moved to the
+    origin and the measured ground there (z = -1.71) to z = 0, so vehicles spawned at (0, 0, ~0)
+    stand on the ground; nearest solid trunk collider is ~2 m away (stem_0058, +x +y).
+    The designer's PhysicsScene is left out (Pegasus creates its own).
+    Rendering needs motion BVH disabled ("Gaussians do not support motion BVH"); RTX lidar then
+    returns hits from the Gaussians themselves. Visual quality holds near the capture height
+    (~1-6 m above ground) and degrades to haze from high above."""
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "World"
+{
+    def Xform "hv22"
+    {
+        double3 xformOp:translate = (-12.02, 9.88, 1.71)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+
+        # 4.9 M Gaussians (ParticleField3DGaussianSplat), radiance baked in.
+        def Xform "splat" (
+            prepend payload = @./hv22_forest/hv22_JOINT_pf.usdz@
+        )
+        {
+        }
+
+        # Invisible colliders: splat DTM ground (+ filled holes, catch floor) and 139 trunk columns.
+        def Xform "collision" (
+            prepend references = @./hv22_forest/hv22_collision.usda@
+        )
+        {
+        }
+    }
+
+    def DomeLight "DomeLight"
+    {
+        float inputs:intensity = 1000
+    }
+}
